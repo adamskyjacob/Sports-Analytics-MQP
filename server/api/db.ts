@@ -110,6 +110,7 @@ async function getPerPickStatisticPercentages() {
         Math.abs((await hittingCollection.find().toArray()).sort((a, b) => a.war - b.war)[0]['war']),
         Math.abs((await pitchingCollection.find().toArray()).sort((a, b) => a.eraMinus - b.eraMinus)[0]['eraMinus'])
     ]);
+
     const minimums: { uzr: number, war: number, eraMinus: number } = {
         uzr: minArr[0],
         war: minArr[1],
@@ -491,14 +492,13 @@ async function getRoundMoneyStuff(): Promise<void> {
     for (var round of Object.keys(actualPickComboValue)) {
         actualPickComboArray.push({
             round: round,
-            totalValue: actualPickComboValue[round]["sum"],
+            pct: actualPickComboValue[round]["sum"],
             playerCount: actualPickComboValue[round]["plr_count"]
         });
 
         actualPickComboPct.push({
             round: round,
-            totalValue: actualPickComboValue[round]["sum"] / actualPickValueSum,
-            playerCount: actualPickValueCount
+            pct: actualPickComboValue[round]["sum"] / actualPickValueSum
         });
     }
 
