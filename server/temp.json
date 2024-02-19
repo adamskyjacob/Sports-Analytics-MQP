@@ -1,0 +1,79 @@
+﻿{
+  "bisPlayerId": 21923,
+  "pickRound": "1",
+  "pickNumber": 1,
+  "displayPickNumber": 1,
+  "roundPickNumber": 1,
+  "home": {},
+  "school": { "name": "Crenshaw HS (Los Angeles, CA)" },
+  "headshotLink": "https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:silo:current.png/w_120,q_auto:best/v1/people/122864/headshot/draft/current",
+  "person": {
+    "id": 122864,
+    "fullName": "Darryl Strawberry",
+    "link": "/api/v1/people/122864",
+    "firstName": "Darryl",
+    "lastName": "Strawberry",
+    "primaryNumber": "18",
+    "birthDate": "1962-03-12",
+    "currentAge": 61,
+    "birthCity": "Los Angeles",
+    "birthStateProvince": "CA",
+    "birthCountry": "USA",
+    "height": "6' 6\"",
+    "weight": 200,
+    "active": false,
+    "primaryPosition": {
+      "code": "O",
+      "name": "Outfield",
+      "type": "Outfielder",
+      "abbreviation": "OF"
+    },
+    "useName": "Darryl",
+    "useLastName": "Strawberry",
+    "middleName": "Eugene",
+    "boxscoreName": "Strawberry",
+    "gender": "M",
+    "isPlayer": true,
+    "isVerified": true,
+    "draftYear": 1980,
+    "lastPlayedDate": "1999-10-03",
+    "mlbDebutDate": "1983-05-06",
+    "batSide": {
+      "code": "L",
+      "description": "Left"
+    },
+    "pitchHand": {
+      "code": "L",
+      "description": "Left"
+    },
+    "nameFirstLast": "Darryl Strawberry",
+    "nameSlug": "darryl-strawberry-122864",
+    "firstLastName": "Darryl Strawberry",
+    "lastFirstName": "Strawberry, Darryl",
+    "lastInitName": "Strawberry, D",
+    "initLastName": "D Strawberry",
+    "fullFMLName": "Darryl Eugene Strawberry",
+    "fullLFMName": "Strawberry, Darryl Eugene",
+    "strikeZoneTop": 3.656,
+    "strikeZoneBottom": 1.677
+  },
+  "team": {
+    "springLeague": {
+      "id": 115,
+      "name": "Grapefruit League",
+      "link": "/api/v1/league/115",
+      "abbreviation": "GL"
+    },
+    "allStarStatus": "N",
+    "id": 121,
+    "name": "New York Mets",
+    "link": "/api/v1/teams/121"
+  },
+  "draftType": {
+    "code": "JR",
+    "description": "June Amateur Draft"
+  },
+  "isDrafted": true,
+  "isPass": false,
+  "year": "1980"
+}
