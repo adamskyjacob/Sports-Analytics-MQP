@@ -2,14 +2,21 @@
 from pymongo import MongoClient
 from pymongo import server_api
 
-import json
+from scipy.optimize import curve_fit
 
 import numpy as np
 import matplotlib.pyplot as plt
 
 from credentials import connectionUrl
-from sort import pick_sort
 
+def sort(item):
+    try:
+        val = int(item["pick"])
+        return val
+    except ValueError:
+        if item["pick"] == "intl":
+            return 3100
+        return 3000
 
 class Visualizer:
     def __init__(self, img_dir):
@@ -19,31 +26,44 @@ class Visualizer:
         
         self.per_pick_stat_pct = self.__mongodb["Per_Pick_Statistics_Percentage"]
         self.per_pick_player_value_pct = self.__mongodb["Per_Pick_Player_Value_Percentage"]
-            
-    def plot_stat(self, y_data, title, filename):
-        data = sorted(list(self.per_pick_stat_pct.find()), key=pick_sort)
+        self.per_round_stat_pct = self.__mongodb["Per_Round_Statistics_Percentage"]
+        self.per_round_player_value_pct = self.__mongodb["Per_Round_Player_Value_Percentage"]        
         
-        data_x = range(0, len(data))  
+
+    def plot_stat(self, y_data, title, filename, isround, keys):
+        def inverse_exponential(x, a, b, c):
+            return a * np.exp(-b * x) + c
         
-        monetary = sorted(list(self.per_pick_player_value_pct.find()), key=pick_sort)
+        x_data = range(0, len(y_data))
+        
+        monetary = sorted(list(self.per_round_player_value_pct.find() if isround else self.per_pick_player_value_pct.find()), key=sort)
         x_mon = range(0, len(monetary))
-        y_mon = [d["pct"] for d in monetary]
+        y_mon = [d["pct"] * 100 for d in monetary]
         
-        x_fit = np.linspace(min(data_x), max(data_x), 100)
         
-        poly_fit = np.poly1d(np.polyfit(data_x, y_data, 4))
-        y_fit = poly_fit(x_fit)
+        popt, _ = curve_fit(inverse_exponential, x_mon, y_mon)
+        a_opt, b_opt, c_opt = popt
+        x_fit = np.linspace(min(x_mon), max(x_mon), len(x_mon))
+        y_fit = inverse_exponential(x_fit, a_opt, b_opt, c_opt)
         
-        plt.xlabel("Pick Position")
-        plt.ylabel("Percentage Total")
+        plt.plot(x_fit, y_fit, 'r-', label='Draft Value Percentage')
+        
+        plt.xlabel("Draft Round" if isround else "Draft Pick Number")
+        plt.ylabel("Percentage (%)")
         plt.title(title)
-        plt.bar(x_mon, y_mon)
-        plt.plot(x_fit, y_fit, label=title, color='red')
         
-        plt.ylim(0, max(y_mon))
+        if isround:
+            plt.ylim(0, 60)
+            plt.xticks(range(len(keys)), keys)
+        else: 
+            plt.ylim(0, 10)
+            
+        plt.bar(x_data, y_data, label=title)
+    
         plt.legend()
-        plt.savefig(f"{self.__img_dir}{filename}.png")
+        plt.savefig(f"{self.__img_dir}{'round' if isround else 'pick'}_{filename}.png")
         self.clear()
+        plt.close()
     
     def clear(self):
         plt.cla()

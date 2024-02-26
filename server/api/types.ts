@@ -81,6 +81,10 @@ class Timer {
             return elapsed;
         }
     }
+
+    public print(){
+        console.log(`======== FINISHED IN ${this.getElapsedTime(true)} ========`);
+    }
 }
 
 type PlayerDraftInfo = {
@@ -144,12 +148,11 @@ type StatisticsPlayer = {
 type DraftPlayer = {
     id: number,
     draftYear: number,
+    pickNumber: string,
     draftRound: string,
-    draftPosition: number,
     isPass: boolean,
     pickValue: number,
-    signingBonus: number,
-    school: "HS" | "UNI" | "N/A"
+    signingBonus: number
 }
 
 export type {
