@@ -1,5 +1,5 @@
 
-import { DraftPlayer, PlayerInformation, RoundEntry, SectionalValue, StatGroup, Timer } from './types';
+import { DraftPlayer, Stats, Timer } from './types';
 import { MongoClient, ServerApiVersion } from 'mongodb';
 import { connectionUrl } from './credentials';
 import readline from 'readline';
@@ -74,20 +74,6 @@ export async function tryInitializeDatabase() {
     timer.print();
 }
 
-type Stats = {
-    war: number,
-    uzr: number,
-    ops: number,
-    fldPct: number,
-    eraMinus: number,
-    inningsPitched: number,
-    plateAppearances: number,
-    fieldingInnings: number,
-    gamesPlayedHitting: number,
-    gamesPlayedPitching: number,
-    gamesPlayedFielding: number
-}
-
 function emptyStats() {
     return {
         war: 0,
@@ -129,7 +115,7 @@ async function getStatisticPercentages() {
 
     const players = await playerInfoCollection.find().toArray();
 
-    for (var player of players) {
+    for (let player of players) {
         const fielding = await fieldingCollection.find({ id: player._id }).toArray();
         const hitting = await hittingCollection.find({ id: player._id }).toArray();
         const pitching = await pitchingCollection.find({ id: player._id }).toArray();
@@ -149,7 +135,7 @@ async function getStatisticPercentages() {
         let newValuePick = mapPick.get(String(player.pickNumber)) ?? emptyStats();
         let newValueRound = mapRound.get(round) ?? emptyStats();
         
-        for (var obj of fielding) {
+        for (let obj of fielding) {
             newValuePick.fldPct += Number(obj.fldPct ?? 0);
             newValuePick.uzr += Number(obj.uzr) + Number(minimums.uzr);
             newValuePick.fieldingInnings += calculateNumericInning(Number(obj.innings));
@@ -161,7 +147,7 @@ async function getStatisticPercentages() {
             newValueRound.gamesPlayedFielding += Number(obj.gamesPlayed);
         }
 
-        for (var obj of hitting) {
+        for (let obj of hitting) {
             newValuePick.war += Number(obj.war) + Number(minimums.war);
             newValuePick.plateAppearances += Number(obj.plateAppearances);
             newValuePick.gamesPlayedHitting += Number(obj.gamesPlayed);
@@ -173,7 +159,7 @@ async function getStatisticPercentages() {
             newValueRound.ops += Number(obj.ops);
         }
 
-        for (var obj of pitching) {
+        for (let obj of pitching) {
             newValuePick.gamesPlayedPitching += Number(obj.gamesPlayed);
             newValuePick.inningsPitched += calculateNumericInning(Number(obj.inningsPitched));
             newValuePick.eraMinus += Number(obj.eraMinus) + Number(minimums.eraMinus);
@@ -301,10 +287,10 @@ async function getPlayerValue() {
 
     let perPickPlayerValueTable = [];
     let perRoundPlayerValueTable = [];
-    for (var [key, val] of mapPick.entries()) {
+    for (let [key, val] of mapPick.entries()) {
         perPickPlayerValueTable.push({ pick: key, pct: val / totalValue });
     }
-    for (var [key, val] of mapRound.entries()) {
+    for (let [key, val] of mapRound.entries()) {
         perRoundPlayerValueTable.push({ pick: key, pct: val / totalValue });
     }
 

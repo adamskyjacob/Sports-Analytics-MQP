@@ -82,7 +82,7 @@ class Timer {
         }
     }
 
-    public print(){
+    public print() {
         console.log(`======== FINISHED IN ${this.getElapsedTime(true)} ========`);
     }
 }
@@ -155,8 +155,22 @@ type DraftPlayer = {
     signingBonus: number
 }
 
+type Stats = {
+    war: number,
+    uzr: number,
+    ops: number,
+    fldPct: number,
+    eraMinus: number,
+    inningsPitched: number,
+    plateAppearances: number,
+    fieldingInnings: number,
+    gamesPlayedHitting: number,
+    gamesPlayedPitching: number,
+    gamesPlayedFielding: number
+}
+
 export type {
-    PlayerDraftInfo, SQLBasic, SQLEnum, SQLBasicType, SQLType, SQLVarType, SQLTypeArray, PlayerInformation, StatisticsPlayer, DraftPlayer, StatGroup, RoundEntry, MonetaryValue, PerPickStat
+    PlayerDraftInfo, SQLBasic, SQLEnum, SQLBasicType, SQLType, SQLVarType, SQLTypeArray, PlayerInformation, StatisticsPlayer, DraftPlayer, StatGroup, RoundEntry, MonetaryValue, PerPickStat, Stats
 }
 
 export { Timer, SectionalValue }

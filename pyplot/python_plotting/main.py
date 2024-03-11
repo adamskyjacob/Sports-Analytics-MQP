@@ -11,16 +11,7 @@ def sort(item):
             return 3100
         return 3000
 
-if __name__ == "__main__":
-    def reset_fig():
-        plt.figure(figsize=(16, 9))
-        plt.gca().spines['bottom'].set_position('zero')
-        plt.gca().spines['top'].set_position('zero')
-        plt.gca().spines['right'].set_position('zero')
-    
-        plt.gca().spines['top'].set_visible(False)
-        plt.gca().spines['right'].set_visible(False)
-        
+if __name__ == "__main__":        
     vis = Visualizer("./images/")
     unsorted_round = list(vis.per_round_stat_pct.find())
     round_data = sorted(unsorted_round, key=sort)
@@ -29,10 +20,8 @@ if __name__ == "__main__":
         if key in ["_id", "pick"]:
             continue
         
-        reset_fig()
         vis.plot_stat([d[key] * 100 for d in round_data], title=key, filename=key, isround=True, keys=[d["pick"] for d in round_data], delta=False)
         
-        reset_fig()
         vis.plot_stat([d[key] * 100 for d in round_data], title=key, filename=key, isround=True, keys=[d["pick"] for d in round_data], delta=True)
         
     unsorted_pick = list(vis.per_pick_stat_pct.find())
@@ -42,5 +31,4 @@ if __name__ == "__main__":
         if key in ["_id", "pick"]:
             continue
         
-        reset_fig()
         vis.plot_stat([d[key] * 100 for d in pick_data], title=key, filename=key, isround=False, keys=[d["pick"] for d in pick_data], delta=False)
