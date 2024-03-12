@@ -32,7 +32,7 @@ const endYear = 2023;
 const mongodb = client.db("MLB");
 
 const playerInfoCollection = mongodb.collection("Player_Info");
-const draftCollection = mongodb.collection("Draft_Info");
+const draftCollection = mongodb.collection<Document & DraftPlayer>("Draft_Info");
 
 const fieldingCollection = mongodb.collection("Fielding");
 const hittingCollection = mongodb.collection("Hitting");
@@ -324,8 +324,8 @@ async function getDraftInfo(): Promise<void> {
                         pickNumber: player['pickNumber'] ?? 0,
                         draftRound: player['pickRound'] ?? 0,
                         isPass: player['isPass'] ?? false,
-                        signingBonus: player['signingBonus'] ?? 0,
-                        pickValue: player['pickValue'] ?? 0,
+                        signingBonus: Number(player['signingBonus']) ?? 0,
+                        pickValue: Number(player['pickValue']) ?? 0,
                     } as DraftPlayer);
                 }
             }
@@ -360,12 +360,12 @@ async function getPlayerInformation(): Promise<void> {
                 includedIds.push(player['id'])
                 if (playerDraft) {
                     playerInfoTable.push({
-                        _id: player['id'],
-                        draftYear: player['draftYear'] ?? 0,
-                        draftRound: playerDraft['draftRound'],
-                        pickNumber: playerDraft['pickNumber'],
-                        mlbDebutDate: Number((player['mlbDebutDate'] ?? "00000").substring(0, 4)),
-                        lastPlayedDate: Number((player['lastPlayedDate'] ?? "00000").substring(0, 4) ?? 10000)
+                        _id: player.id,
+                        draftYear: player.draftYear ?? 0,
+                        draftRound: playerDraft.draftRound,
+                        pickNumber: playerDraft.pickNumber,
+                        mlbDebutDate: Number((player.mlbDebutDate ?? "00000").substring(0, 4)),
+                        lastPlayedDate: Number((player.lastPlayedDate ?? "00000").substring(0, 4) ?? 10000)
                     });
                 } else {
                     playerInfoTable.push({

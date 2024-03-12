@@ -36,6 +36,7 @@ class Visualizer:
         def inverse_exponential(x, a, b, c):
             return a * np.exp(-b * x) + c
      
+        # preprocessing of player value data (convert decimal to pct), just sorting based on round and putting "intl" at the end.
         monetary = sorted(list(self.per_round_player_value_pct.find() if isround else self.per_pick_player_value_pct.find()), key=sort)
         x_data = range(0, len(y_data))
         x_mon = range(0, len(monetary))
@@ -65,8 +66,10 @@ class Visualizer:
             if delta == True:
                 zipped = list(zip(y_mon, y_fit))
                 plt.bar(x_fit, height=[d[0] - d[1] for d in zipped], bottom=[d[1] for d in zipped], color="black", alpha=1, label='PV Stat Delta', width=0.075)
-            
-            plt.scatter(x_data, y_data, label=f"Actual {title}")
+            # optional plotting of actual stat values, excluded to simplify graph
+            #plt.scatter(x_data, y_data, label=f"Actual {title}")
+            plt.scatter(x_data[-1], y_data[-1], label="Undrafted Stat %")
+
         else: 
             plt.ylim(0, 10)
         
