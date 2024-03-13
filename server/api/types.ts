@@ -1,5 +1,3 @@
-type BMLArray<T, N extends number, Current extends T[]> = Current['length'] extends N ? [...Current, ...T[]] : BMLArray<T, N, [...Current, T]>;
-export type MLArray<T, N extends number> = BMLArray<T, N, []>;
 
 type RoundEntry = {
     round: string,
@@ -98,31 +96,6 @@ type PlayerDraftInfo = {
     INTERNATIONAL: boolean
 }
 
-type SQLBasic = "TINYBLOB" | "TINYTEXT" | "MEDIUMTEXT" | "MEDIUMBLOB" | "LONGTEXT" | "LONGBLOB" | "BOOL" | "BOOLEAN" | "DATE" | "YEAR";
-
-type SQLEnum = SQLType & {
-    vals: string[],
-    type: "ENUM"
-}
-
-type SQLBasicType = {
-    name: string,
-    type: SQLBasic,
-    nullable: "NULL" | "NOT NULL"
-}
-
-type SQLType = {
-    name: string,
-    type: string,
-    nullable: "NULL" | "NOT NULL"
-}
-
-type SQLVarType = SQLType & {
-    size: number
-}
-
-type SQLTypeArray = (SQLType | SQLVarType | SQLBasicType | SQLEnum)[];
-
 type PlayerInformation = {
     _id: number,
     firstName: string,
@@ -170,7 +143,7 @@ type Stats = {
 }
 
 export type {
-    PlayerDraftInfo, SQLBasic, SQLEnum, SQLBasicType, SQLType, SQLVarType, SQLTypeArray, PlayerInformation, StatisticsPlayer, DraftPlayer, StatGroup, RoundEntry, MonetaryValue, PerPickStat, Stats
+    PlayerDraftInfo, PlayerInformation, StatisticsPlayer, DraftPlayer, StatGroup, RoundEntry, MonetaryValue, PerPickStat, Stats
 }
 
 export { Timer, SectionalValue }
