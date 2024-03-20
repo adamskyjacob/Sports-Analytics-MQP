@@ -7,12 +7,12 @@ export function calculateNumericInning(num: number) {
         return num;
     }
     const trunc = Math.trunc(num);
-    return trunc + ((num - trunc) * (10 / 3));
+    return trunc + (num - trunc) * (10 / 3);
 }
 
-export function colorString(color: ("R" | "Y" | "G" | "B" | "P"), val: any) {
+export function colorString(color: "R" | "Y" | "G" | "B" | "P", val) {
     function getString() {
-        return (val instanceof Array) ? JSON.stringify(val) : val;
+        return val instanceof Array ? JSON.stringify(val) : val;
     }
     switch (color) {
         case "R": {
@@ -37,12 +37,12 @@ export function splitArray<T>(array: T[], size: number): T[][] {
     if (array.length <= size) {
         return [array];
     }
-    let result: T[][] = [];
+    const result: T[][] = [];
     for (let i = 0; i < Math.ceil(array.length / size); i++) {
-        let subArr = [];
+        const subArr = [];
         for (let j = 0; j < size; j++) {
-            const val = array[i * size + j]
-            if (val == undefined) {
+            const val = array[i * size + j];
+            if (val === undefined) {
                 break;
             }
             subArr.push(val);
@@ -52,7 +52,7 @@ export function splitArray<T>(array: T[], size: number): T[][] {
     return result;
 }
 
-export const baseURL: string = "https://statsapi.mlb.com/api/v1/";
+export const baseURL = "https://statsapi.mlb.com/api/v1/";
 
 export const yearMax = 2024;
 
@@ -67,3 +67,15 @@ export function yearlyPlayers(year: number) {
 export function draftPlayers(year: number) {
     return `${baseURL}draft/${year}`;
 }
+
+export const excludedRounds = [
+    "C",
+    "C-1",
+    "C-A",
+    "C-2",
+    "C-B",
+    "SUP",
+    "1C",
+    "2C",
+    "4C",
+];

@@ -1,29 +1,36 @@
-
 type RoundEntry = {
-    round: string,
+    round: string;
     stats: {
-        war: number,
-        uzr: number,
-        ops: number,
-        fldPct: number,
-        eraMinus: number,
-        fieldingInnings: number,
-        plateAppearances: number,
-        inningsPitched: number,
-        gamesPlayedHitting: number,
-        gamesPlayedPitching: number,
-        gamesPlayedFielding: number,
-    }
+        war: number;
+        uzr: number;
+        ops: number;
+        fldPct: number;
+        eraMinus: number;
+        fieldingInnings: number;
+        plateAppearances: number;
+        inningsPitched: number;
+        gamesPlayedHitting: number;
+        gamesPlayedPitching: number;
+        gamesPlayedFielding: number;
+    };
 };
 
 type StatGroup = {
-    sum: number,
-    plr_count: number
-}
+    sum: number;
+    plr_count: number;
+};
 
-type PerPickStat = { pick: string, totalValue: number };
+type PerPickStat = {
+    pick: string;
+    totalValue: number;
+};
 
-type MonetaryValue = { _id: string, round: string, totalValue: number, playerCount: number }
+type MonetaryValue = {
+    _id: string;
+    round: string;
+    totalValue: number;
+    playerCount: number;
+};
 
 class SectionalValue {
     war: StatGroup;
@@ -55,8 +62,8 @@ class SectionalValue {
     public static newStatGroup(): StatGroup {
         return {
             sum: 0,
-            plr_count: 0
-        }
+            plr_count: 0,
+        };
     }
 }
 
@@ -86,64 +93,65 @@ class Timer {
 }
 
 type PlayerDraftInfo = {
-    PLAYER_ID: number,
-    FIRST_NAME: string,
-    LAST_NAME: string,
-    DRAFT_YEAR: number,
-    DRAFT_ROUND: string,
-    DRAFT_POSITION: number,
-    DEBUT_YEAR: number,
-    INTERNATIONAL: boolean
-}
+    PLAYER_ID: number;
+    FIRST_NAME: string;
+    LAST_NAME: string;
+    DRAFT_YEAR: number;
+    DRAFT_ROUND: string;
+    DRAFT_POSITION: number;
+    DEBUT_YEAR: number;
+    INTERNATIONAL: boolean;
+};
 
 type PlayerInformation = {
-    _id: number,
-    firstName: string,
-    lastName: string,
-    birthDate: string,
-    birthCountry: string,
-    height: string,
-    weight: number,
-    draftYear: number,
-    mlbDebutDate: number,
-    lastPlayedDate: number,
-    batSide: "L" | "R" | "S",
-    pitchHand: "L" | "R" | "S"
-}
+    draftYear: number;
+    draftRound: string;
+    pickNumber: number;
+    mlbDebutDate: number;
+    lastPlayedDate: number;
+};
 
 type StatisticsPlayer = {
-    id: number,
-    year: number,
-    position: string,
-    stats: any[]
-}
+    id: number;
+    year: number;
+    position: string;
+    stats: any[];
+};
 
 type DraftPlayer = {
-    id: number,
-    draftYear: number,
-    pickNumber: string,
-    draftRound: string,
-    isPass: boolean,
-    pickValue: number,
-    signingBonus: number
-}
+    id: number;
+    draftYear: number;
+    pickNumber: string;
+    draftRound: string;
+    isPass: boolean;
+    signingBonus: number;
+    pickValue: number;
+};
 
 type Stats = {
-    war: number,
-    uzr: number,
-    ops: number,
-    fldPct: number,
-    eraMinus: number,
-    inningsPitched: number,
-    plateAppearances: number,
-    fieldingInnings: number,
-    gamesPlayedHitting: number,
-    gamesPlayedPitching: number,
-    gamesPlayedFielding: number
-}
+    war: number;
+    uzr: number;
+    ops: number;
+    fldPct: number;
+    eraMinus: number;
+    inningsPitched: number;
+    plateAppearances: number;
+    fieldingInnings: number;
+    gamesPlayedHitting: number;
+    gamesPlayedPitching: number;
+    gamesPlayedFielding: number;
+};
 
 export type {
-    PlayerDraftInfo, PlayerInformation, StatisticsPlayer, DraftPlayer, StatGroup, RoundEntry, MonetaryValue, PerPickStat, Stats
-}
+    PlayerDraftInfo,
+    PlayerInformation,
+    StatisticsPlayer,
+    DraftPlayer,
+    StatGroup,
+    RoundEntry,
+    MonetaryValue,
+    PerPickStat,
+    Stats,
+};
 
-export { Timer, SectionalValue }
+export { Timer, SectionalValue };
