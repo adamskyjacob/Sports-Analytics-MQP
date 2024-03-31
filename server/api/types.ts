@@ -90,6 +90,10 @@ class Timer {
     public print() {
         console.log(`======== FINISHED IN ${this.getElapsedTime(true)} ========`);
     }
+
+    public printTime() {
+        console.log(`======== FINISHED DATA COLLECTION AT ${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getSeconds()} ========`);
+    }
 }
 
 type PlayerDraftInfo = {
@@ -128,6 +132,33 @@ type DraftPlayer = {
     pickValue: number;
 };
 
+type HittingPlayer = {
+    id: number;
+    seasonYear: number;
+    war: number;
+    ops: string;
+    plateAppearances: number;
+    gamesPlayed: number;
+};
+
+type FieldingPlayer = {
+    id: number;
+    seasonYear: number;
+    position: number;
+    uzr: number;
+    fldPct: string;
+    innings: string;
+    gamesPlayed: number;
+};
+
+type PitchingPlayer = {
+    id: number;
+    seasonYear: number;
+    eraMinus: number;
+    inningsPitched: string;
+    gamesPlayed: number;
+};
+
 type Stats = {
     war: number;
     uzr: number;
@@ -152,6 +183,9 @@ export type {
     MonetaryValue,
     PerPickStat,
     Stats,
+    PitchingPlayer,
+    FieldingPlayer,
+    HittingPlayer
 };
 
 export { Timer, SectionalValue };

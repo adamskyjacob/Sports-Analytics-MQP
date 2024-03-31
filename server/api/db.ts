@@ -1,5 +1,4 @@
-
-import { DraftPlayer, PlayerInformation, Stats, Timer } from "./types";
+import { DraftPlayer, FieldingPlayer, HittingPlayer, PitchingPlayer, PlayerInformation, Stats, Timer } from "./types";
 import { MongoClient, ServerApiVersion } from "mongodb";
 import { connectionUrl } from "./credentials";
 import readline from "readline";
@@ -37,15 +36,17 @@ const mongodb = client.db("MLB");
 const playerInfoCollection = mongodb.collection<Document & PlayerInformation>("Player_Info");
 const draftCollection = mongodb.collection<Document & DraftPlayer>("Draft_Info");
 
-const fieldingCollection = mongodb.collection("Fielding");
-const hittingCollection = mongodb.collection("Hitting");
-const pitchingCollection = mongodb.collection("Pitching");
+const fieldingCollection = mongodb.collection<Document & FieldingPlayer>("Fielding");
+const hittingCollection = mongodb.collection<Document & HittingPlayer>("Hitting");
+const pitchingCollection = mongodb.collection<Document & PitchingPlayer>("Pitching");
 
 const perPickStatisticsPercentageCollection = mongodb.collection("Per_Pick_Statistics_Percentage");
 const perPickPlayerValuePercentageCollection = mongodb.collection("Per_Pick_Player_Value_Percentage");
+const perPickStatisticsAverageCollection = mongodb.collection("Per_Pick_Statistics_Average");
 
 const perRoundStatisticsPercentageCollection = mongodb.collection("Per_Round_Statistics_Percentage");
 const perRoundPlayerValuePercentageCollection = mongodb.collection("Per_Round_Player_Value_Percentage");
+const perRoundStatisticsAverageCollection = mongodb.collection("Per_Round_Statistics_Average");
 
 const perPickPlayerValueAverageCollection = mongodb.collection("Per_Pick_Player_Value_Average");
 const perRoundPlayerValueAverageCollection = mongodb.collection("Per_Round_Player_Value_Average");
@@ -67,18 +68,19 @@ export async function tryInitializeDatabase() {
     await client.connect();
     if (clearDB) {
         (await mongodb.collections()).forEach(async (c) => {
-            if (c.dbName === "MLB" && !["Hitting", "Pitching", "Fielding", "Draft_Info", "Player_Info", "Per_Pick_Statistics_Percentage", "Per_Round_Statistics_Percentage"].includes(c.collectionName)) {
+            if (c.dbName === "MLB" && !["Hitting", "Pitching", "Fielding", "Draft_Info", "Player_Info"].includes(c.collectionName)) {
                 await c.deleteMany();
             }
         });
     }
 
+    console.log(`======== STARTING DATA COLLECTION AT ${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getSeconds()} ========`)
     await getDraftInfo();
     await getPlayerInformation();
     await getPlayerStatistics();
     await getPlayerValue();
     await getStatisticPercentages();
-    timer.print();
+    timer.printTime();
 }
 
 function createEmptyStats() {
@@ -108,6 +110,9 @@ async function getStatisticPercentages() {
     const mapPick: Map<string, Stats> = new Map();
     const mapRound: Map<string, Stats> = new Map();
 
+    const mapPickAvg: Map<string, Stats> = new Map();
+    const mapRoundAvg: Map<string, Stats> = new Map();
+
     const minArr = await Promise.all([
         Math.abs((await fieldingCollection.find().toArray()).sort((a, b) => a.uzr - b.uzr)[0]["uzr"]),
         Math.abs((await hittingCollection.find().toArray()).sort((a, b) => a.war - b.war)[0]["war"]),
@@ -127,9 +132,10 @@ async function getStatisticPercentages() {
     const players = await playerInfoCollection.find().toArray();
 
     for (const player of players) {
-        const fielding = await fieldingCollection.find({ id: player._id }).toArray();
-        const hitting = await hittingCollection.find({ id: player._id }).toArray();
-        const pitching = await pitchingCollection.find({ id: player._id }).toArray();
+        const pid = Number(player._id);
+        const fielding = await fieldingCollection.find({ id: pid }).toArray();
+        const hitting = await hittingCollection.find({ id: pid }).toArray();
+        const pitching = await pitchingCollection.find({ id: pid }).toArray();
 
         let round = String(player.draftRound);
         const roundNum = Number(round);
@@ -146,16 +152,29 @@ async function getStatisticPercentages() {
         const newValuePick = mapPick.get(String(player.pickNumber)) ?? createEmptyStats();
         const newValueRound = mapRound.get(round) ?? createEmptyStats();
 
+        const newCountPick = mapPickAvg.get(String(player.pickNumber)) ?? createEmptyStats();
+        const newCountRound = mapRoundAvg.get(round) ?? createEmptyStats();
+
         for (const obj of fielding) {
             newValuePick.fldPct += Number(obj.fldPct ?? 0);
             newValuePick.uzr += Number(obj.uzr) + Number(minimums.uzr);
             newValuePick.fieldingInnings += calculateNumericInning(Number(obj.innings));
             newValuePick.gamesPlayedFielding += Number(obj.gamesPlayed);
 
+            newCountPick.fldPct += obj.fldPct ? 1 : 0;
+            newCountPick.uzr += obj.fldPct ? 1 : 0;
+            newCountPick.fieldingInnings += obj.fldPct ? 1 : 0;
+            newCountPick.gamesPlayedFielding += obj.fldPct ? 1 : 0;
+
             newValueRound.fldPct += Number(obj.fldPct ?? 0);
             newValueRound.uzr += Number(obj.uzr) + Number(minimums.uzr);
             newValueRound.fieldingInnings += calculateNumericInning(Number(obj.innings));
             newValueRound.gamesPlayedFielding += Number(obj.gamesPlayed);
+
+            newCountRound.fldPct += obj.fldPct ? 1 : 0;
+            newCountRound.uzr += obj.uzr ? 1 : 0;
+            newCountRound.fieldingInnings += obj.innings ? 1 : 0;
+            newCountRound.gamesPlayedFielding += obj.gamesPlayed ? 1 : 0;
         }
 
         for (const obj of hitting) {
@@ -164,10 +183,20 @@ async function getStatisticPercentages() {
             newValuePick.gamesPlayedHitting += Number(obj.gamesPlayed);
             newValuePick.ops += Number(obj.ops);
 
+            newCountPick.war += obj.war ? 1 : 0;
+            newCountPick.plateAppearances += obj.plateAppearances ? 1 : 0;
+            newCountPick.gamesPlayedHitting += obj.gamesPlayed ? 1 : 0;
+            newCountPick.ops += obj.ops ? 1 : 0;
+
             newValueRound.war += Number(obj.war) + Number(minimums.war);
             newValueRound.plateAppearances += Number(obj.plateAppearances);
             newValueRound.gamesPlayedHitting += Number(obj.gamesPlayed);
             newValueRound.ops += Number(obj.ops);
+
+            newCountRound.war += obj.war ? 1 : 0;
+            newCountRound.plateAppearances += obj.plateAppearances ? 1 : 0;
+            newCountRound.gamesPlayedHitting += obj.gamesPlayed ? 1 : 0;
+            newCountRound.ops += obj.ops ? 1 : 0;
         }
 
         for (const obj of pitching) {
@@ -175,16 +204,39 @@ async function getStatisticPercentages() {
             newValuePick.inningsPitched += calculateNumericInning(Number(obj.inningsPitched));
             newValuePick.eraMinus += Number(obj.eraMinus) + Number(minimums.eraMinus);
 
+            newCountPick.gamesPlayedPitching += obj.gamesPlayed ? 1 : 0;
+            newCountPick.inningsPitched += obj.inningsPitched ? 1 : 0;
+            newCountPick.eraMinus += obj.eraMinus ? 1 : 0;
+
             newValueRound.gamesPlayedPitching += Number(obj.gamesPlayed);
             newValueRound.inningsPitched += calculateNumericInning(Number(obj.inningsPitched));
             newValueRound.eraMinus += Number(obj.eraMinus) + Number(minimums.eraMinus);
+
+            newCountRound.gamesPlayedPitching += obj.gamesPlayed ? 1 : 0;
+            newCountRound.inningsPitched += obj.inningsPitched ? 1 : 0;
+            newCountRound.eraMinus += obj.eraMinus ? 1 : 0;
         }
 
         mapPick.set(String(player.pickNumber), newValuePick);
         mapRound.set(round, newValueRound);
+
+        mapPickAvg.set(String(player.pickNumber), newCountPick ?? createEmptyStats());
+        mapRoundAvg.set(round, newCountRound ?? createEmptyStats());
     }
 
-    let [warTotal, uzrTotal, opsTotal, fldPctTotal, eraMinusTotal, inningsPitchedTotal, plateAppearancesTotal, fieldingInningsTotal, gamesPlayedHittingTotal, gamesPlayedPitchingTotal, gamesPlayedFieldingTotal] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    const totals = {
+        war: 0,
+        uzr: 0,
+        ops: 0,
+        fldPct: 0,
+        eraMinus: 0,
+        inningsPitched: 0,
+        plateAppearances: 0,
+        fieldingInnings: 0,
+        gamesPlayedHitting: 0,
+        gamesPlayedPitching: 0,
+        gamesPlayedFielding: 0,
+    };
 
     for (let i = 0; i <= Array.from(mapPick.keys()).filter(t => !isNaN(Number(t))).map(t => Number(t)).sort((a, b) => b - a)[0]; i++) {
         if (!mapPick.get(i.toString())) {
@@ -192,56 +244,95 @@ async function getStatisticPercentages() {
         }
     }
 
-    for (const value of mapPick.values()) {
-        warTotal += value.war;
-        uzrTotal += value.uzr;
-        opsTotal += value.ops;
-        fldPctTotal += value.fldPct;
-        eraMinusTotal += value.eraMinus;
-        inningsPitchedTotal += value.inningsPitched;
-        plateAppearancesTotal += value.plateAppearances;
-        fieldingInningsTotal += value.fieldingInnings;
-        gamesPlayedHittingTotal += value.gamesPlayedHitting;
-        gamesPlayedPitchingTotal += value.gamesPlayedPitching;
-        gamesPlayedFieldingTotal += value.gamesPlayedFielding;
+    for (const key of mapPickAvg.keys()) {
+        const r = mapPickAvg.get(key);
+        const newStat: Stats = createEmptyStats();
+        for (const key2 of Object.keys(r)) {
+            const numer = mapPick.get(key)[key2], denom = mapPickAvg.get(key)[key2];
+            if (denom === 0) {
+                newStat[key2] = 0;
+            } else {
+                newStat[key2] = numer / denom;
+            }
+        }
+        mapPickAvg.set(key, newStat);
     }
 
-    const perPickTable = [], perRoundTable = [];
+    for (const key of mapRoundAvg.keys()) {
+        const r = mapRoundAvg.get(key);
+        const newStat: Stats = createEmptyStats();
+        for (const key2 of Object.keys(r)) {
+            newStat[key2] = mapRound.get(key)[key2] / mapRoundAvg.get(key)[key2];
+        }
+        mapRoundAvg.set(key, newStat);
+    }
+
+    for (const value of mapPick.values()) {
+        totals.war += value.war;
+        totals.uzr += value.uzr;
+        totals.ops += value.ops;
+        totals.fldPct += value.fldPct;
+        totals.eraMinus += value.eraMinus;
+        totals.inningsPitched += value.inningsPitched;
+        totals.plateAppearances += value.plateAppearances;
+        totals.fieldingInnings += value.fieldingInnings;
+        totals.gamesPlayedHitting += value.gamesPlayedHitting;
+        totals.gamesPlayedPitching += value.gamesPlayedPitching;
+        totals.gamesPlayedFielding += value.gamesPlayedFielding;
+    }
+
+    const perPickTable = [],
+        perRoundTable = [],
+        perPickAvgTable = [],
+        perRoundAvgTable = [];
     for (const [key, value] of mapPick.entries()) {
+        perPickAvgTable.push({
+            pick: key,
+            ...(mapPickAvg.get(key) ?? createEmptyStats()),
+        });
+
         perPickTable.push({
             pick: key,
-            war: value.war / warTotal,
-            uzr: value.uzr / uzrTotal,
-            ops: value.ops / opsTotal,
-            fldPct: value.fldPct / fldPctTotal,
-            eraMinus: value.eraMinus / eraMinusTotal,
-            inningsPitched: value.inningsPitched / inningsPitchedTotal,
-            plateAppearances: value.plateAppearances / plateAppearancesTotal,
-            fieldingInnings: value.fieldingInnings / fieldingInningsTotal,
-            gamesPlayedHitting: value.gamesPlayedHitting / gamesPlayedHittingTotal,
-            gamesPlayedPitching: value.gamesPlayedPitching / gamesPlayedPitchingTotal,
-            gamesPlayedFielding: value.gamesPlayedFielding / gamesPlayedFieldingTotal,
+            war: value.war / totals.war,
+            uzr: value.uzr / totals.uzr,
+            ops: value.ops / totals.ops,
+            fldPct: value.fldPct / totals.fldPct,
+            eraMinus: value.eraMinus / totals.eraMinus,
+            inningsPitched: value.inningsPitched / totals.inningsPitched,
+            plateAppearances: value.plateAppearances / totals.plateAppearances,
+            fieldingInnings: value.fieldingInnings / totals.fieldingInnings,
+            gamesPlayedHitting: value.gamesPlayedHitting / totals.gamesPlayedHitting,
+            gamesPlayedPitching: value.gamesPlayedPitching / totals.gamesPlayedPitching,
+            gamesPlayedFielding: value.gamesPlayedFielding / totals.gamesPlayedFielding,
         });
     }
 
     for (const [key, value] of mapRound.entries()) {
+        perRoundAvgTable.push({
+            pick: key,
+            ...(mapRoundAvg.get(key) ?? createEmptyStats()),
+        });
+
         perRoundTable.push({
             pick: key,
-            war: value.war / warTotal,
-            uzr: value.uzr / uzrTotal,
-            ops: value.ops / opsTotal,
-            fldPct: value.fldPct / fldPctTotal,
-            eraMinus: value.eraMinus / eraMinusTotal,
-            inningsPitched: value.inningsPitched / inningsPitchedTotal,
-            plateAppearances: value.plateAppearances / plateAppearancesTotal,
-            fieldingInnings: value.fieldingInnings / fieldingInningsTotal,
-            gamesPlayedHitting: value.gamesPlayedHitting / gamesPlayedHittingTotal,
-            gamesPlayedPitching: value.gamesPlayedPitching / gamesPlayedPitchingTotal,
-            gamesPlayedFielding: value.gamesPlayedFielding / gamesPlayedFieldingTotal,
+            war: value.war / totals.war,
+            uzr: value.uzr / totals.uzr,
+            ops: value.ops / totals.ops,
+            fldPct: value.fldPct / totals.fldPct,
+            eraMinus: value.eraMinus / totals.eraMinus,
+            inningsPitched: value.inningsPitched / totals.inningsPitched,
+            plateAppearances: value.plateAppearances / totals.plateAppearances,
+            fieldingInnings: value.fieldingInnings / totals.fieldingInnings,
+            gamesPlayedHitting: value.gamesPlayedHitting / totals.gamesPlayedHitting,
+            gamesPlayedPitching: value.gamesPlayedPitching / totals.gamesPlayedPitching,
+            gamesPlayedFielding: value.gamesPlayedFielding / totals.gamesPlayedFielding,
         });
     }
     await perPickStatisticsPercentageCollection.insertMany(perPickTable);
     await perRoundStatisticsPercentageCollection.insertMany(perRoundTable);
+
+    await perPickStatisticsAverageCollection.insertMany(perPickAvgTable);
+    await perRoundStatisticsAverageCollection.insertMany(perRoundAvgTable);
 }
 
 async function getPlayerValue() {

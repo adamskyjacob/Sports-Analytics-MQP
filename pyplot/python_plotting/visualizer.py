@@ -85,6 +85,14 @@ class Visualizer:
         self.per_pick_player_value_avg: Collection = self.__mongodb[
             "Per_Pick_Player_Value_Average"
         ]
+        
+        self.per_pick_stat_avg: Collection = self.__mongodb[
+             "Per_Pick_Statistics_Average"
+        ]
+        self.per_round_stat_avg: Collection = self.__mongodb[
+             "Per_Round_Statistics_Average"
+        ]
+
 
         self.y_label: str = "Percentage (%)"
         self.x_label_p: str = "Draft Pick Number"
@@ -201,82 +209,6 @@ class Visualizer:
         self.clear()
         plt.close()
 
-    # def plot_per_section(self, data: list, isround: bool) -> None:
-    #     # Hitting
-    #     self.init_plot()
-    #     if isround:
-    #         plt.title("Per-Round Hitting Statistics")
-    #     else:
-    #         plt.title("Per-Pick Hitting Statistics")
-    #         
-    #     hitting: dict(str, float) = [
-    #         {
-    #             "pick": d["pick"],
-    #             "war": d["war"],
-    #             "ops": d["ops"],
-    #             "gamesPlayedHitting": d["gamesPlayedHitting"],
-    #             "plateAppearances": d["plateAppearances"]
-    #         }
-    #         for d in data
-    #     ]
-    #     
-    #     for key in hitting[0]:
-    #         if key == "pick":
-    #             continue
-    #         
-    #         plt.xticks(range(0, len(hitting)), [d["pick"] for d in hitting], fontsize=45)
-    #         plt.plot(range(0, len(hitting[:-1])), [d[key] for d in hitting[:-1]], label=self.title_map[key], linewidth=self.line_size)
-    #         plt.scatter(len(hitting), hitting[-1][key], label=f"{self.title_map[key]} (Undrafted)")
-    #         plt.legend()
-    #         plt.tight_layout()
-    #       #   
-
-    #     plt.show()
-    #     self.clear()
-    #     plt.close()
-    #     
-    #     # Pitching
-    #     self.init_plot()
-    #     if isround:
-    #         plt.title("Per-Round Pitching Statistics")
-    #     else:
-    #         plt.title("Per-Pick Pitching Statistics")
-    #         
-    #     pitching = [
-    #         {
-    #             "pick": d["pick"],
-    #             "eraMinus": d["eraMinus"],
-    #             "inningsPitched": d["inningsPitched"],
-    #             "gamesPlayedPitching": d["gamesPlayedPitching"]
-    #         }
-    #         for d in data
-    #     ]
-    #         
-    #     self.clear()
-    #     plt.close()
-    #     
-    #     # Fielding
-    #     self.init_plot()
-    #     if isround:
-    #         plt.title("Per-Round Fielding Statistics")
-    #     else:
-    #         plt.title("Per-Pick Fielding Statistics")
-    #         
-    #     fielding = [
-    #         {
-    #             "pick": d["pick"],
-    #             "uzr": d["uzr"],
-    #             "fldPct": d["fldPct"],
-    #             "gamesPlayedFielding": d["gamesPlayedFielding"],
-    #             "fieldingInnings": d["fieldingInnings"]
-    #         }
-    #         for d in data
-    #     ]
-    #     
-    #     self.clear()
-    #     plt.close()
-        
-
     def plot_stat(
         self,
         y_data: list[int],
@@ -285,6 +217,7 @@ class Visualizer:
         isround: bool,
         keys: list[str],
         delta: bool,
+        avg: bool,
     ) -> None:
         def inverse_exponential(x, a, b, c):
             return a * np.exp(-b * x) + c
@@ -302,27 +235,29 @@ class Visualizer:
         )
         x_data = range(0, len(y_data))
         x_mon = range(0, len(monetary))
-        y_mon = [d["pct"] * 100 for d in monetary]
+        y_mon = [d["pct"] if avg else d["pct"] * 100 for d in monetary]
 
         # subarray of x_data is excluding international from the best fit curve calculation
         # dont want it included because it would heavily skew the curve upwards towards the
         # end, and the curve is only for comparison between player value and stat pct.
-        popt, _ = curve_fit(inverse_exponential, x_data[:-1], y_data[:-1])
+        popt, _ = curve_fit(inverse_exponential, x_data[:-1], y_data[:-1], maxfev=5000)
         a_opt, b_opt, c_opt = popt
         x_fit = np.linspace(0, max(x_data[:-1]), len(x_data[:-1]) if isround else 650)
         y_fit = inverse_exponential(x_fit, a_opt, b_opt, c_opt)
 
-        plt.plot(x_fit, y_fit, "r-", label=self.abbrev_map[title], linewidth=self.line_size)
-        plt.xlabel(self.x_label_r if isround else self.x_label_p, fontsize=self.label_size)
-        plt.ylabel(self.y_label, fontsize=self.label_size)
+        if not avg:
+            plt.plot(x_fit, y_fit, "r-", label=self.abbrev_map[title], linewidth=self.line_size)
+            plt.bar(x_mon, y_mon, label="Draft Value Percentage")
+        
+        plt.xlabel(self.x_label_r if isround else self.x_label_p, fontsize=self.label_size)    
+        plt.ylabel(self.y_label if not avg else "Average Value", fontsize=self.label_size)
         plt.title(self.title_map[title], fontsize=self.title_size)
 
-        plt.bar(x_mon, y_mon, label="Draft Value Percentage")
         plt.yticks(fontsize=self.tick_size)
 
         # conditional formatting because round data has higher pct total, also only want the delta line for round data
         # because there are too many bars for pick data
-        if isround:
+        if isround and not avg:
             plt.ylim(0, 60)
             plt.xticks(range(len(keys)), keys, fontsize=self.tick_size)
 
@@ -342,7 +277,10 @@ class Visualizer:
             # plt.scatter(x_data, y_data, label=f"Actual {title}")
 
             plt.scatter([x_data[-1]], [y_data[-1]], label="Undrafted Stat %", s=[self.intl_solo_size])
-
+        elif avg:
+            if isround:
+                plt.xticks(range(len(keys)), keys, fontsize=self.tick_size)
+            plt.bar(x_data, y_data);
         else:
             plt.ylim(0, 5)
             plt.xticks(fontsize=self.tick_size)
@@ -366,7 +304,7 @@ class Visualizer:
         plt.legend(fontsize=self.tick_size)
         plt.tight_layout()
         plt.savefig(
-            f"{self.__img_dir}{'delta' if delta else 'normal'}/{'round' if isround else 'pick'}/{self.stat_dir_parser.get(filename)}/{'round' if isround else 'pick'}_{filename}{'_pvdelta' if delta else ''}.png"
+            f"{self.__img_dir}{'delta' if delta else 'normal'}/{'round' if isround else 'pick'}/{'avg' if avg else 'total_pct'}/{self.stat_dir_parser.get(filename)}/{'round' if isround else 'pick'}_{filename}{'_pvdelta' if delta else ('_avg' if avg else '')}.png"
         )
         self.clear()
         plt.close()
